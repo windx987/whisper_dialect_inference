@@ -1,6 +1,17 @@
 import gradio as gr
 import requests
 
+import google.generativeai as genai
+import os
+
+genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+
+def get_completion(chat_logs):
+
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+    response = model.generate_content(chat_logs)
+    return response.text
+
 url = 'http://localhost:8000/transcribe/'
 
 def transcribe(audio, speaker):
@@ -21,14 +32,29 @@ def update_chat_logs(audio, speaker):
     global chat_logs
     new_entry = transcribe(audio, speaker)
     chat_logs.append(new_entry)
-    return "\n".join(chat_logs), None  # Reset the audio input
+    return "\n".join(chat_logs), None  # Reset the audio  input
 
 def generate_chat_summary(chat_logs):
-    # Access Gemini API for prompt engineering (replace with actual API call)
-    summary_prompt = f"Provide a concise summary of the doctor-patient conversation based on the following dialogue:\n{chat_logs}"
-    # summary = Gemini.generate_text(summary_prompt, max_length=150)
-    summary = f'this is mock up summary from following logs.\n{summary_prompt}'
-    return summary
+    
+    # chat_logs = """   
+    # Doctor: สวัสดีครับ คุณมีอาการอะไรบ้าง
+    # Patient: สวัสดีครับ ผมมีอาการปวดหัวและคลื่นไส้มา 3 วันแล้วครับ
+    # Doctor: มีไข้ไหมครับ
+    # Patient: ใช่ครับ มีไข้สูงประมาณ 38.5 องศาเซลเซียส
+    # Doctor: เข้าใจแล้วครับ เดี๋ยวจะตรวจร่างกายเพิ่มเติมนะครับ
+    # """
+    
+    prompt = f"""
+    Your task is to generate a short summary of a conversation \
+    between a doctor and a patient in Thai language. \
+
+    Summarize the conversation below, delimited by triple \
+    backticks, in at most 30 words, focusing on what the patient is sick with. \
+
+    chat_logs: ```{chat_logs}```
+    """
+    response = get_completion(prompt)
+    return response
 
 def summarize_chat_logs():
     global chat_logs
