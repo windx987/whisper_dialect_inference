@@ -1,3 +1,2 @@
 fastapi
 transformers
-google-generativeai
